@@ -1,7 +1,7 @@
 [package]
 name = "sync-input"
 version = "0.1.0"
-edition = "2021"
+edition = "2024"
 description = "Mirror what you type in the focused herdr pane to every other pane in the same tab, by watching pane output (tmux synchronize-panes, output-watching flavor)."
 
 [[bin]]

@@ -9,36 +9,39 @@
 ## 지원 버전
 
 - herdr 0.7.4 이상
+- **Rust 툴체인(cargo, edition 2024 → rustc 1.85+)** — 설치 시 소스에서 컴파일됩니다. herdr는 툴체인을 대신 설치해 주지 않습니다.
+
+> 플러그인 **id**는 `herdr-synchronize-input`입니다. (GitHub 저장소 이름과 동일하며, `herdr plugin config-dir` · 키바인딩 등에서 이 id를 사용합니다.)
 
 ## 설치
 
-### 1. 빌드
+### 방법 A — GitHub에서 설치 (권장)
 
 ```bash
-cd sync-input
+herdr plugin install forteleaf/herdr-synchronize-input
+```
+
+herdr가 저장소를 클론하고 매니페스트의 빌드 훅(`cargo build --release`)을 실행한 뒤 등록합니다.
+
+### 방법 B — 로컬 체크아웃에서 링크 (개발용)
+
+```bash
 cargo build --release
+herdr plugin link "$(pwd)"     # 플러그인 디렉토리(herdr-plugin.toml이 있는 곳)에서
 ```
 
-### 2. 플러그인 등록
-
-```bash
-herdr plugin link /절대경로/sync-input
-```
-
-절대경로는 `sync-input` 디렉토리의 전체 경로로 지정합니다.
-
-### 3. 설정 파일 생성
+### 설정 파일 생성 (공통)
 
 플러그인 설정 디렉토리에 config.toml을 복사합니다.
 
 ```bash
-cp config.example.toml "$(herdr plugin config-dir sync-input)/config.toml"
+cp config.example.toml "$(herdr plugin config-dir herdr-synchronize-input)/config.toml"
 ```
 
 이 명령으로 설정 파일의 위치를 확인할 수 있습니다:
 
 ```bash
-herdr plugin config-dir sync-input
+herdr plugin config-dir herdr-synchronize-input
 ```
 
 ## 키바인딩 설정
@@ -49,7 +52,7 @@ herdr 설정 파일(`~/.config/herdr/config.toml`)의 `[keys]` 섹션에 아래 
 [[keys.command]]
 key = "prefix+shift+y"
 type = "plugin_action"
-command = "sync-input.toggle"
+command = "herdr-synchronize-input.toggle"
 description = "synchronize input to all panes"
 ```
 
@@ -75,7 +78,7 @@ description = "synchronize input to all panes"
 
 ## 설정
 
-설정 파일(`~/.config/herdr/plugin-config/sync-input/config.toml`)의 필드:
+설정 파일(`$(herdr plugin config-dir herdr-synchronize-input)/config.toml`)의 필드:
 
 ### `ignore_panes`
 

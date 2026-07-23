@@ -70,10 +70,10 @@ impl Config {
     /// at offset 0 and would strip nothing, silently disabling the prompt
     /// heuristic — treat it as "unset" so the heuristic runs instead.
     fn normalize(&mut self) {
-        if let Some(re) = &self.prompt_regex {
-            if re.trim().is_empty() {
-                self.prompt_regex = None;
-            }
+        if let Some(re) = &self.prompt_regex
+            && re.trim().is_empty()
+        {
+            self.prompt_regex = None;
         }
     }
 }

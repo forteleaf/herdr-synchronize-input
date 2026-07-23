@@ -35,10 +35,10 @@ fn path(tab_id: &str) -> Option<PathBuf> {
 
 /// Record (or overwrite) the watcher state for a tab.
 pub fn write(state: &State) {
-    if let Some(path) = path(&state.tab_id) {
-        if let Ok(json) = serde_json::to_string(state) {
-            let _ = std::fs::write(path, json);
-        }
+    if let Some(path) = path(&state.tab_id)
+        && let Ok(json) = serde_json::to_string(state)
+    {
+        let _ = std::fs::write(path, json);
     }
 }
 
