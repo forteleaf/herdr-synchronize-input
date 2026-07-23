@@ -7,9 +7,12 @@
 //!     the focused tab.
 //!   * `watch`  — the watcher daemon, spawned detached by `toggle`. Takes
 //!     `--source <pane_id> --tab <tab_id>`.
+//!   * `ensure-keybinding` — startup-hook entrypoint; idempotently adds the
+//!     toggle shortcut to the user's herdr config.toml.
 
 mod config;
 mod herdr;
+mod keybinding;
 mod line;
 mod state;
 mod toggle;
@@ -24,8 +27,11 @@ fn main() -> ExitCode {
     let result = match cmd {
         "toggle" => toggle::run(),
         "watch" => toggle::run_watch(&args[1..]),
+        "ensure-keybinding" => keybinding::ensure(),
         other => {
-            eprintln!("sync-input: unknown subcommand {other:?} (expected `toggle` or `watch`)");
+            eprintln!(
+                "sync-input: unknown subcommand {other:?} (expected `toggle`, `watch`, or `ensure-keybinding`)"
+            );
             return ExitCode::from(2);
         }
     };

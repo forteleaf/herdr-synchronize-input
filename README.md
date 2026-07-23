@@ -1,52 +1,58 @@
-# sync-input: herdr 동기화된 입력 플러그인
+# herdr-synchronize-input — synchronized input plugin for herdr
 
-## 개요
+*English · [한국어](README.ko.md)*
 
-`sync-input`은 herdr 터미널 멀티플렉서용 플러그인으로, tmux의 `synchronize-panes`와 유사한 기능을 제공합니다. 사용자가 포커스된 패널(활성 패널)에 직접 타이핑하면, 같은 탭의 다른 모든 패널에 입력이 실시간으로 반영됩니다.
+## Overview
 
-**작동 원리**: 플러그인이 포커스 패널의 화면 출력을 감시하여 입력 줄의 변화를 감지하고, `herdr pane send-text`로 다른 패널에 델타(변화분)를 전송합니다.
+`herdr-synchronize-input` is a plugin for the herdr terminal multiplexer that provides functionality similar to tmux's `synchronize-panes`. When you type directly into the focused (active) pane, your input is mirrored in real time to every other pane in the same tab.
 
-## 지원 버전
+**How it works**: the plugin watches the focused pane's screen output, detects changes on the input line, and sends the delta to the other panes with `herdr pane send-text`.
 
-- herdr 0.7.4 이상
-- **Rust 툴체인(cargo, edition 2024 → rustc 1.85+)** — 설치 시 소스에서 컴파일됩니다. herdr는 툴체인을 대신 설치해 주지 않습니다.
+## Requirements
 
-> 플러그인 **id**는 `herdr-synchronize-input`입니다. (GitHub 저장소 이름과 동일하며, `herdr plugin config-dir` · 키바인딩 등에서 이 id를 사용합니다.)
+- herdr 0.7.4 or newer
+- **A Rust toolchain (cargo, edition 2024 → rustc 1.85+)** — the plugin is compiled from source at install time. herdr does not install toolchains for you.
 
-## 설치
+> The plugin **id** is `herdr-synchronize-input` (same as the GitHub repository name). This id is used by `herdr plugin config-dir`, the keybinding, and so on.
 
-### 방법 A — GitHub에서 설치 (권장)
+## Installation
+
+### Option A — install from GitHub (recommended)
 
 ```bash
 herdr plugin install forteleaf/herdr-synchronize-input
 ```
 
-herdr가 저장소를 클론하고 매니페스트의 빌드 훅(`cargo build --release`)을 실행한 뒤 등록합니다.
+herdr clones the repository, runs the manifest build hook (`cargo build --release`), then registers the plugin.
 
-### 방법 B — 로컬 체크아웃에서 링크 (개발용)
+### Option B — link a local checkout (for development)
 
 ```bash
 cargo build --release
-herdr plugin link "$(pwd)"     # 플러그인 디렉토리(herdr-plugin.toml이 있는 곳)에서
+herdr plugin link "$(pwd)"     # run from the plugin directory (where herdr-plugin.toml lives)
 ```
 
-### 설정 파일 생성 (공통)
+### Create the config file (both options)
 
-플러그인 설정 디렉토리에 config.toml을 복사합니다.
+Copy `config.toml` into the plugin's config directory:
 
 ```bash
 cp config.example.toml "$(herdr plugin config-dir herdr-synchronize-input)/config.toml"
 ```
 
-이 명령으로 설정 파일의 위치를 확인할 수 있습니다:
+You can find the config directory with:
 
 ```bash
 herdr plugin config-dir herdr-synchronize-input
 ```
 
-## 키바인딩 설정
+## Keybinding (added automatically)
 
-herdr 설정 파일(`~/.config/herdr/config.toml`)의 `[keys]` 섹션에 아래 항목을 추가합니다. 설정 후 herdr 서버를 재부착하면 적용됩니다.
+herdr has no way to register a keybinding from a manifest, so this plugin adds
+one for you **once** via a startup hook. The first time herdr restores its
+session after install, the plugin ensures the following block exists in your
+herdr config (`~/.config/herdr/config.toml`), backing up the file first and only
+adding the block if an active binding is not already present:
 
 ```toml
 [[keys.command]]
@@ -56,52 +62,64 @@ command = "herdr-synchronize-input.toggle"
 description = "synchronize input to all panes"
 ```
 
-`prefix`는 일반적으로 `Ctrl-b`입니다. 따라서 `Ctrl-b Shift-y`를 누르면 동기화가 토글됩니다.
+`prefix` is `Ctrl-b` by default (whatever you set as your herdr prefix), so
+`prefix Shift-y` toggles synchronization.
 
-## 사용법
+Notes:
 
-### 동기화 활성화/비활성화
+- **Re-attach herdr** after the binding is added for it to take effect.
+- The install runs **only once** (tracked by a marker in the plugin's state
+  directory). After that the config is yours: change the `key`, or remove the
+  block entirely, and it will not be re-added.
+- The added block is marked with an `# Added by herdr-synchronize-input` comment
+  so it is easy to find.
+- You can also add the block manually before first launch; the hook detects the
+  existing active binding and does nothing.
 
-`prefix+shift+y` (예: `Ctrl-b Shift-y`)를 눌러 동기화를 토글합니다.
+## Usage
 
-- **첫 번째 클릭**: 동기화 활성화 — 포커스 탭의 포커스 패널에 타이핑하면 다른 패널에도 반영됩니다.
-- **두 번째 클릭**: 동기화 비활성화
+### Enable / disable synchronization
 
-### 입력 반영
+Press `prefix+shift+y` (e.g. `Ctrl-b Shift-y`) to toggle synchronization.
 
-동기화가 활성화된 상태에서:
+- **First press**: synchronization on — typing in the focused pane of the focused tab is mirrored to the other panes.
+- **Second press**: synchronization off.
 
-1. 포커스 패널에서 텍스트를 입력합니다.
-2. 입력된 각 문자가 같은 탭의 다른 패널에 실시간으로 전송됩니다.
-3. `Enter`를 누르면 다른 패널에도 개행이 전송되어, 모든 패널에서 동시에 명령이 실행됩니다.
-4. 백스페이스(`Backspace`)로 삭제한 문자도 반영됩니다(프롬프트 제거 후 계산).
+### What gets mirrored
 
-## 설정
+While synchronization is on:
 
-설정 파일(`$(herdr plugin config-dir herdr-synchronize-input)/config.toml`)의 필드:
+1. Type text in the focused pane.
+2. Each character is sent to the other panes in the same tab in real time.
+3. Pressing `Enter` sends a newline to the other panes too, so the command runs in every pane at once.
+4. Characters deleted with `Backspace` are mirrored as well (computed after stripping the prompt).
+
+## Configuration
+
+Fields in the config file (`$(herdr plugin config-dir herdr-synchronize-input)/config.toml`):
 
 ### `ignore_panes`
 
-동기화에서 제외할 패널 ID의 리스트입니다. 예: `["w0:p1", "w1:p3"]`
+A list of pane IDs to exclude from synchronization, e.g. `["w0:p1", "w1:p3"]`.
 
-`herdr pane list` 명령으로 패널 ID를 확인할 수 있습니다.
+Find pane IDs with `herdr pane list`:
 
 ```bash
 herdr pane list
 ```
 
-**기본값**: `[]` (모든 패널 포함)
+**Default**: `[]` (all panes included)
 
-**예**:
+**Example**:
 ```toml
-ignore_panes = ["w0:p1"]  # 워크스페이스 0, 패널 1은 제외
+ignore_panes = ["w0:p1"]  # exclude workspace 0, pane 1
 ```
 
 ### `notify`
 
-동기화가 활성화될 때 herdr 알림 표시 여부입니다. `true` 또는 `false`.
+Whether to show a herdr notification when synchronization is toggled. `true` or `false`.
 
-**기본값**: `true`
+**Default**: `true`
 
 ```toml
 notify = true
@@ -109,11 +127,11 @@ notify = true
 
 ### `poll_interval_ms`
 
-화면 출력 감시 주기(밀리초)입니다. 값이 작을수록 반응성이 좋지만 CPU 사용률이 높아집니다.
+How often (in milliseconds) the plugin re-reads the focused pane's screen output. Lower values feel more responsive but use more CPU.
 
-**기본값**: `60` (0.06초)
+**Default**: `60` (0.06s)
 
-**범위**: 권장 50~500ms
+**Range**: 50–500ms recommended
 
 ```toml
 poll_interval_ms = 60
@@ -121,104 +139,106 @@ poll_interval_ms = 60
 
 ### `prompt_regex`
 
-입력 줄에서 프롬프트를 제거하기 위한 정규표현식(선택 사항)입니다. 이 정규표현식이 매칭되는 부분(예: `user@host:~$`)은 입력 텍스트로 간주하지 않습니다.
+An optional regular expression that matches the shell prompt on the input line. The matched portion (e.g. `user@host:~$`) is treated as prompt, not as typed input.
 
-프롬프트 제거가 제대로 작동하지 않으면 이 옵션을 설정하여 정확도를 높일 수 있습니다.
+Set this if prompt stripping does not work correctly with your prompt.
 
-**기본값**: 빈 문자열(정규표현식 사용 안 함, 기본 휴리스틱만 적용)
+**Default**: unset (no regex; the built-in heuristic is used)
 
-**예**:
+**Examples**:
 ```toml
-# bash 스타일 프롬프트: "user@host:~$ "
+# bash-style prompt: "user@host:~$ "
 prompt_regex = "^[^@]+@[^ ]+:[^$]*\\$ $"
 
-# zsh 스타일 프롬프트: "user@host ~$ "
+# zsh-style prompt: "user@host ~$ "
 prompt_regex = "^[^@]+@[^ ]+.*\\$ $"
 
-# 단순 $ 프롬프트
+# simple $ prompt
 prompt_regex = "^\\$ $"
 ```
 
-## 한계 및 제한사항
+## Limitations
 
-**중요**: 이 플러그인은 herdr 플러그인 API의 제약으로 인해 다음과 같은 한계가 있습니다.
+**Important**: because of constraints in herdr's plugin API, this plugin has the following limitations.
 
-### 원인
+### Why
 
-herdr 플러그인 API는 **키 입력 이벤트 훅을 제공하지 않습니다**. tmux의 경우 키 입력을 원천에서 복제할 수 있지만, herdr에서는 불가능합니다. 따라서 이 플러그인은 포커스 패널의 **화면 출력을 감시**하여 입력 줄의 변화를 감지하고 다른 패널에 흉내내는 방식으로 동작합니다.
+herdr's plugin API **does not provide a key-input event hook**. tmux can duplicate keystrokes at the source, but herdr cannot. So this plugin **watches the focused pane's screen output**, detects changes on the input line, and imitates them on the other panes.
 
-### 동작하는 경우
+### What works
 
-- ✅ 일반 텍스트 입력 (영문, 한글, 기호)
-- ✅ 백스페이스(`Backspace`)로 삭제
-- ✅ `Enter`로 명령 실행
+- ✅ Ordinary text input (Latin, CJK, symbols)
+- ✅ Deletion with `Backspace`
+- ✅ Running a command with `Enter`
 
-### 동작하지 않는 경우
+### What does not work
 
-- ❌ **특수 제어 키**: `Ctrl-C`, `Ctrl-D`, `Ctrl-Z`, 화살표 키(`←`, `→`, `↑`, `↓`), `Esc`, `Tab` 등. 이들 키는 다른 패널에 전송되지 않습니다.
-- ❌ **비밀번호 입력**: 비밀번호는 일반적으로 에코되지 않으므로 감시 불가능합니다.
-- ⚠️ **셸 자동완성 및 색상 강조**: `zsh`의 구문 강조는 동기화되지 않습니다. `bash`·`fish` 등의 자동완성은 잘못 미러링될 수 있습니다.
-- ❌ **멀티라인 명령**: 여러 줄의 명령(예: 헤레독)에서 오정렬이 발생할 수 있습니다.
-- ❌ **복잡한 셸 인터랙션**: 대화형 프로그램(`vim`, `less`, `python` REPL 등)은 지원하지 않습니다.
+- ❌ **Special/control keys**: `Ctrl-C`, `Ctrl-D`, `Ctrl-Z`, arrow keys (`←`, `→`, `↑`, `↓`), `Esc`, `Tab`, etc. are not sent to the other panes.
+- ❌ **Password input**: passwords are usually not echoed, so they cannot be watched.
+- ⚠️ **Shell autosuggestions & syntax highlighting**: `zsh` syntax highlighting is not synchronized. `bash`/`fish` autosuggestions may be mirrored incorrectly.
+- ❌ **Multi-line commands**: multi-line input (e.g. heredocs) may become misaligned.
+- ❌ **Complex shell interactions**: interactive programs (`vim`, `less`, the `python` REPL, etc.) are not supported.
 
-### 언제 사용하면 좋은가
+### When to use it
 
-- 여러 서버에 동일한 명령을 실행하고 싶을 때
-- 동일한 파일 경로를 여러 패널에 입력하고 싶을 때
-- 간단한 스크립트나 명령 라인 작업을 여러 패널에서 동시에 실행하고 싶을 때
+- Running the same command across several servers
+- Entering the same file path in multiple panes
+- Running simple scripts or command-line tasks in several panes at once
 
-### 언제 사용하면 안 되는가
+### When not to use it
 
-- 정확한 입력 동기화가 필수적인 작업(예: 비밀번호, 민감한 설정)
-- 대화형 프로그램 제어
-- 복잡한 셸 자동완성 또는 구문 강조 기능이 필요한 경우
+- Tasks that require exact input synchronization (e.g. passwords, sensitive settings)
+- Controlling interactive programs
+- When you rely on complex shell autocompletion or syntax highlighting
 
-## 트러블슈팅
+## Troubleshooting
 
-### 동기화가 작동하지 않음
+### Synchronization does not work
 
-**증상**: 입력했는데 다른 패널에 나타나지 않음
+**Symptom**: you type, but nothing appears in the other panes.
 
-**해결 방법**:
+**Fixes**:
 
-1. 동기화가 활성화되었는지 확인합니다. `prefix+shift+y`를 누르면 herdr이 알림을 표시합니다 (`notify = true`일 때).
+1. Confirm synchronization is on. Pressing `prefix+shift+y` shows a herdr notification (when `notify = true`).
 
-2. 포커스 패널이 올바른지 확인합니다. 어두운 테두리로 표시된 패널이 포커스 패널입니다.
+2. Confirm the keybinding is registered. The [keybinding block](#keybinding-added-automatically) should be present in `~/.config/herdr/config.toml`, and you must re-attach the herdr server after it is added.
 
-3. 다른 패널이 같은 탭에 있는지 확인합니다. 동기화는 같은 탭 내의 패널에만 적용됩니다.
+3. Confirm the correct pane is focused. The pane with the highlighted border is focused.
 
-4. 프롬프트가 올바르게 인식되는지 확인합니다:
-   - 포커스 패널에 프롬프트만 표시된 상태에서 (아무 입력 없이) 한 글자를 입력합니다.
-   - 그 글자가 다른 패널에 나타나지 않으면, 프롬프트 인식에 문제가 있을 수 있습니다.
-   - 이 경우 `config.toml`의 `prompt_regex`를 설정하여 프롬프트를 명시적으로 정의합니다.
+4. Confirm the other panes are in the same tab. Synchronization only applies within the same tab.
 
-### 특정 패널을 제외하고 싶음
+5. Confirm the prompt is recognized correctly:
+   - With only the prompt showing (no input), type a single character in the focused pane.
+   - If it does not appear in the other panes, prompt detection may be failing.
+   - In that case, set `prompt_regex` in `config.toml` to define the prompt explicitly.
 
-`config.toml`에서 `ignore_panes`를 설정합니다:
+### Exclude specific panes
+
+Set `ignore_panes` in `config.toml`:
 
 ```toml
 ignore_panes = ["w0:p2", "w0:p3"]
 ```
 
-패널 ID는 `herdr pane list` 명령으로 확인합니다.
+Find pane IDs with `herdr pane list`.
 
-### CPU 사용률이 높음
+### High CPU usage
 
-감시 주기를 늘립니다. `config.toml`에서 `poll_interval_ms`를 증가시킵니다:
+Increase the poll interval. Raise `poll_interval_ms` in `config.toml`:
 
 ```toml
-poll_interval_ms = 200  # 기본값 60에서 200으로 증가
+poll_interval_ms = 200  # increase from the default 60 to 200
 ```
 
-반응성과 CPU 사용률의 트레이드오프를 고려하여 조정합니다.
+Tune it against the responsiveness / CPU trade-off.
 
-## 참고
+## Reference
 
-- `herdr pane list`: 워크스페이스의 모든 패널 목록 표시
-- `herdr tab list`: 현재 워크스페이스의 탭 목록 표시
-- `herdr pane read <id>`: 특정 패널의 화면 내용 읽기
-- `herdr notification show <title>`: herdr 알림 표시
+- `herdr pane list`: list all panes in the workspace
+- `herdr tab list`: list tabs in the current workspace
+- `herdr pane read <id>`: read the screen content of a pane
+- `herdr notification show <title>`: show a herdr notification
 
-## 라이선스
+## License
 
-(프로젝트 라이선스 정보)
+(project license information)
