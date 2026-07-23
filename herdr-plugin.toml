@@ -1,0 +1,21 @@
+id = "sync-input"
+name = "Sync Input"
+version = "0.1.0"
+min_herdr_version = "0.7.4"
+description = "Mirror what you type in the focused pane to every other pane in the same tab, by watching pane output (tmux synchronize-panes, output-watching flavor)."
+platforms = ["macos", "linux"]
+
+# Compiled during `herdr plugin install <owner>/<repo>` (before the plugin is
+# registered). Requires a Rust toolchain (cargo) on PATH; herdr does not install
+# toolchains. Produces ./target/release/sync-input, referenced by the action below.
+[[build]]
+command = ["cargo", "build", "--release"]
+
+# Bound to a key in the user's config.toml (e.g. prefix+shift+y). Firing it once
+# starts a background watcher that mirrors your keystrokes to the other panes in
+# the focused tab; firing it again stops the watcher.
+[[actions]]
+id = "toggle"
+title = "Synchronize input to all panes"
+contexts = ["workspace"]
+command = ["./target/release/sync-input", "toggle"]

@@ -1,0 +1,20 @@
+[package]
+name = "sync-input"
+version = "0.1.0"
+edition = "2021"
+description = "Mirror what you type in the focused herdr pane to every other pane in the same tab, by watching pane output (tmux synchronize-panes, output-watching flavor)."
+
+[[bin]]
+name = "sync-input"
+path = "src/main.rs"
+
+[dependencies]
+regex = "1"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+toml = "0.8"
+
+[profile.release]
+opt-level = "z"
+lto = true
+strip = true
