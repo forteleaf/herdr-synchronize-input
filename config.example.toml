@@ -1,20 +1,31 @@
-# sync-input 플러그인 설정
+# sync-input 플러그인 설정 / sync-input plugin configuration
 #
 # 이 파일을 플러그인 설정 디렉토리에 config.toml로 복사합니다:
+# Copy this file to the plugin's config directory as config.toml:
 #   cp config.example.toml "$(herdr plugin config-dir herdr-synchronize-input)/config.toml"
 #
 # 모든 필드는 선택 사항입니다. 아래의 값들이 기본값입니다.
+# All fields are optional. The values below are the defaults.
 
 # 동기화에서 제외할 패널 ID 목록입니다. 포커스 탭에 있어도 이 목록의 패널에는
 # 동기화된 입력이 전송되지 않습니다. 패널 ID는 `herdr pane list` 명령으로 확인합니다.
 # 예: "w0:p1" (워크스페이스 0, 패널 1)
+#
+# List of pane IDs to exclude from synchronization. Even if a pane is in the
+# focused tab, synchronized input is not sent to panes in this list. Look up
+# pane IDs with the `herdr pane list` command.
+# Example: "w0:p1" (workspace 0, pane 1)
 ignore_panes = []
 
 # 동기화가 활성화될 때 herdr 알림을 표시할지 여부입니다.
+# Whether to show a herdr notification when synchronization is enabled.
 notify = true
 
 # 화면 출력 감시 주기(밀리초 단위)입니다. 값이 작을수록 반응성이 좋지만
 # CPU 사용률이 높아집니다. 권장 범위: 50~500ms
+#
+# How often to poll screen output, in milliseconds. Smaller values are more
+# responsive but use more CPU. Recommended range: 50-500ms.
 poll_interval_ms = 50
 
 # 입력 줄에서 프롬프트를 제거하기 위한 정규표현식입니다(선택 사항).
@@ -24,4 +35,13 @@ poll_interval_ms = 50
 #   bash 스타일:  "^[^@]+@[^ ]+:[^$]*\\$ $"
 #   zsh 스타일:   "^[^@]+@[^ ]+.*\\$ $"
 #   단순 $:       "^\\$ $"
+#
+# Regular expression to strip the prompt from an input line (optional).
+# The portion matching this regex is treated as the prompt and excluded from
+# the input. If synchronized input is inaccurate, set this option to define
+# the prompt explicitly.
+# Examples:
+#   bash style:  "^[^@]+@[^ ]+:[^$]*\\$ $"
+#   zsh style:   "^[^@]+@[^ ]+.*\\$ $"
+#   simple $:    "^\\$ $"
 # prompt_regex = ""

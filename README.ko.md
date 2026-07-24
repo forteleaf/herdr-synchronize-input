@@ -61,6 +61,44 @@ description = "synchronize input to all panes"
 
 블록을 추가한 뒤에는 **herdr를 재부착**해야 적용됩니다.
 
+## 제어키 브로드캐스트 (Ctrl+L, Ctrl+C, …)
+
+텍스트 동기화는 타이핑한 문자를 미러링하지만, 제어키(Ctrl+L·Ctrl+C·화살표 등)는 미러링할 수 없습니다 — 입력 줄에 흔적을 남기지 않고 herdr에 키 입력 훅도 없기 때문입니다. 이런 키를 위해 플러그인은 키에 바인딩하는 **브로드캐스트 액션**을 제공합니다:
+
+| 액션 | 전송 키 |
+|---|---|
+| `herdr-synchronize-input.send-ctrl-l` | Ctrl+L (화면 clear) |
+| `herdr-synchronize-input.send-ctrl-c` | Ctrl+C (중단) |
+| `herdr-synchronize-input.send-ctrl-d` | Ctrl+D (EOF) |
+| `herdr-synchronize-input.send-ctrl-w` | Ctrl+W (단어 삭제) |
+| `herdr-synchronize-input.send-ctrl-b` | Ctrl+B (예: tmux prefix) |
+
+각 액션은 **sync-aware**입니다: 동기화가 ON이면 포커스 탭의 모든 패널에(ignore 제외), OFF이면 포커스 패널에만 보냅니다 — 그래서 실제 키 위에 직접 바인딩해도 안전합니다.
+
+원하는 것만 `~/.config/herdr/config.toml`에 바인딩하세요. 두 가지 방식:
+
+```toml
+# 전용 단축키(권장) — 실제 Ctrl+L은 그대로 둠:
+[[keys.command]]
+key = "prefix+ctrl+l"
+type = "plugin_action"
+command = "herdr-synchronize-input.send-ctrl-l"
+description = "clear all panes"
+
+# 또는 실제 키 위에 직접 바인딩(습관대로. 동기화 OFF면 포커스 패널로 그냥 전달):
+[[keys.command]]
+key = "ctrl+l"
+type = "plugin_action"
+command = "herdr-synchronize-input.send-ctrl-l"
+description = "clear all panes when synced"
+```
+
+다른 키를 브로드캐스트하려면 `herdr-plugin.toml`의 액션을 복사하고 herdr 키 이름(예: `ctrl+a`, `up`)을 넣으면 됩니다. 단, 바인딩된 키는 누를 때마다 짧은 Node 프로세스를 하나 띄우므로, 아주 자주 누르는 키에 거는 것은 피하세요.
+
+### 중첩 tmux 제어 (부분 지원)
+
+패널들이 SSH로 서버에 접속해 tmux를 띄운 상태라면, `ctrl+b`를 `send-ctrl-b`에 바인딩해 tmux prefix를 모든 패널에 브로드캐스트할 수 있어 모든 세션이 동시에 prefix 모드로 들어갑니다. **하지만 prefix _다음_에 누르는 키**(tmux 명령 — `c`, `n`, 화살표 등)는 tmux가 가로채 셸에 에코되지 않으므로, 텍스트 감시가 보거나 브로드캐스트할 수 없습니다. 원격 tmux를 완전히 제어하려면 그 키들을 각각 브로드캐스트 액션으로 바인딩해야 합니다. 즉 prefix와 개별 제어키까지는 되지만, "prefix + 명령키" 시퀀스 전체 동기화는 안 됩니다.
+
 ## 사용법
 
 ### 동기화 활성화/비활성화

@@ -65,6 +65,59 @@ shortcut.
 
 **Re-attach herdr** after adding the block for it to take effect.
 
+## Broadcasting control keys (Ctrl+L, Ctrl+C, …)
+
+Text sync mirrors typed characters, but it cannot mirror control keys (Ctrl+L,
+Ctrl+C, arrows, …): they leave no trace on the input line and herdr has no
+key-input hook. For those the plugin ships explicit **broadcast actions** you
+bind to keys:
+
+| Action | Sends |
+|---|---|
+| `herdr-synchronize-input.send-ctrl-l` | Ctrl+L (clear screen) |
+| `herdr-synchronize-input.send-ctrl-c` | Ctrl+C (interrupt) |
+| `herdr-synchronize-input.send-ctrl-d` | Ctrl+D (EOF) |
+| `herdr-synchronize-input.send-ctrl-w` | Ctrl+W (delete word) |
+| `herdr-synchronize-input.send-ctrl-b` | Ctrl+B (e.g. tmux prefix) |
+
+Each action is **sync-aware**: when sync is ON it broadcasts the key to every
+pane in the focused tab (ignored panes excluded); when sync is OFF it sends only
+to the focused pane — so binding directly over the real key stays safe.
+
+Bind the ones you want in `~/.config/herdr/config.toml`. Two styles:
+
+```toml
+# Dedicated shortcut (recommended) — leaves the real Ctrl+L alone:
+[[keys.command]]
+key = "prefix+ctrl+l"
+type = "plugin_action"
+command = "herdr-synchronize-input.send-ctrl-l"
+description = "clear all panes"
+
+# Or bind directly over the real key (matches habit; when sync is off it just
+# passes through to the focused pane):
+[[keys.command]]
+key = "ctrl+l"
+type = "plugin_action"
+command = "herdr-synchronize-input.send-ctrl-l"
+description = "clear all panes when synced"
+```
+
+To broadcast a different key, copy an action in `herdr-plugin.toml` with any
+herdr key name (e.g. `ctrl+a`, `up`). Note each bound key spawns a short-lived
+Node process per press, so avoid binding keys you hammer constantly.
+
+### Controlling nested tmux (partial)
+
+If your panes are SSH'd into servers running tmux, binding `ctrl+b` to
+`send-ctrl-b` broadcasts the tmux prefix to every pane, so all sessions enter
+prefix mode at once. **But the key you press _after_ the prefix** (the tmux
+command — `c`, `n`, an arrow, …) is consumed by tmux and never echoed to the
+shell, so the text watcher cannot see or broadcast it. Fully driving remote
+tmux would require binding each of those keys as its own broadcast action. So
+this covers the prefix and individual control keys — not arbitrary
+prefix-then-key sequences.
+
 ## Usage
 
 ### Enable / disable synchronization

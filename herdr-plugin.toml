@@ -16,3 +16,38 @@ id = "toggle"
 title = "Synchronize input to all panes"
 contexts = ["workspace"]
 command = ["node", "sync-input.js", "toggle"]
+
+# Broadcast control keys. Output-watching can't detect a control key (it leaves
+# no trace on the input line and herdr has no key-input hook), so each is an
+# explicit action a user binds to a key. When sync is ON they go to every pane
+# in the focused tab; when OFF, only to the focused pane (safe to bind directly
+# over the real key). See README "Broadcasting control keys".
+[[actions]]
+id = "send-ctrl-l"
+title = "Broadcast Ctrl+L (clear screen)"
+contexts = ["workspace"]
+command = ["node", "sync-input.js", "send", "ctrl+l"]
+
+[[actions]]
+id = "send-ctrl-c"
+title = "Broadcast Ctrl+C (interrupt)"
+contexts = ["workspace"]
+command = ["node", "sync-input.js", "send", "ctrl+c"]
+
+[[actions]]
+id = "send-ctrl-d"
+title = "Broadcast Ctrl+D (EOF)"
+contexts = ["workspace"]
+command = ["node", "sync-input.js", "send", "ctrl+d"]
+
+[[actions]]
+id = "send-ctrl-w"
+title = "Broadcast Ctrl+W (delete word)"
+contexts = ["workspace"]
+command = ["node", "sync-input.js", "send", "ctrl+w"]
+
+[[actions]]
+id = "send-ctrl-b"
+title = "Broadcast Ctrl+B (e.g. tmux prefix)"
+contexts = ["workspace"]
+command = ["node", "sync-input.js", "send", "ctrl+b"]
