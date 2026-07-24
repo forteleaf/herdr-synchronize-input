@@ -2,6 +2,52 @@
 
 *English · [한국어](README.ko.md)*
 
+> **⚠️ Status: ABANDONED.** This plugin does not work reliably and is no longer
+> maintained. It cannot reach "works correctly" because of a hard limitation in
+> herdr's plugin API (see the failure log below). Kept only as a record.
+
+## Failure log (post-mortem)
+
+**Goal:** replicate tmux `synchronize-panes` — type in one pane and have it
+mirror live to the other panes in the tab.
+
+**Why it can't work:** herdr's plugin/socket API (0.7.4) exposes **no key-input
+hook** and **no output-changed event**. tmux duplicates keystrokes at the
+source; herdr cannot. All a plugin can do is **poll and diff the visible screen
+text** and re-send it — a heuristic, not real input capture.
+
+**What that heuristic can't handle (tried and confirmed broken):**
+
+- **Control keys** (Ctrl+C/L/D, arrows, Esc, Tab): leave no trace on the input
+  line, so they can't be detected. The workaround was one explicit key binding
+  per key — clunky, and hijacking hot keys spawns a Node process per press.
+- **Shell autosuggestions** (fish/zsh grey hints): once ANSI colour is stripped
+  they look identical to typed text, so they get mirrored as real input — wrong
+  commands land in the other panes.
+- **No-echo input** (passwords), **multi-line commands**, completion menus, and
+  interactive apps (vim/less/REPLs) do not mirror.
+- **Prompt detection** is a guess; unusual prompts need a hand-written regex.
+- **Nested tmux over SSH:** the `ctrl+b` prefix can be broadcast, but the tmux
+  command key pressed *after* it is consumed by tmux and never echoed, so it
+  cannot be mirrored.
+
+**herdr operational quirks also got in the way:**
+
+- Startup hooks do not fire on install/link/reload — only on session restore.
+- Locally-linked *and* installed plugins vanished from the registry after a live
+  handoff.
+- There is no way to auto-register a keybinding; the user must edit
+  `config.toml` by hand.
+
+**Conclusion:** output-watching is a dead end for correct input synchronization.
+Reliable multi-pane input would require a real key-input hook / broadcast
+feature in herdr itself (upstream), or using tmux. **Project abandoned.**
+
+The documentation below describes the (partially working) implementation as it
+stood, for reference only.
+
+---
+
 ## Overview
 
 `herdr-synchronize-input` is a plugin for the herdr terminal multiplexer that provides functionality similar to tmux's `synchronize-panes`. When you type directly into the focused (active) pane, your input is mirrored in real time to every other pane in the same tab.
@@ -280,7 +326,3 @@ Tune it against the responsiveness / CPU trade-off.
 - `herdr tab list`: list tabs in the current workspace
 - `herdr pane read <id>`: read the screen content of a pane
 - `herdr notification show <title>`: show a herdr notification
-
-## License
-
-(project license information)
