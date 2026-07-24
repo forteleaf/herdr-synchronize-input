@@ -11,7 +11,7 @@
 ## Requirements
 
 - herdr 0.7.4 or newer
-- **A Rust toolchain (cargo, edition 2024 → rustc 1.85+)** — the plugin is compiled from source at install time. herdr does not install toolchains for you.
+- **Node.js on your PATH** — herdr does not install it for you. There is no build/compile step and no npm dependencies.
 
 > The plugin **id** is `herdr-synchronize-input` (same as the GitHub repository name). This id is used by `herdr plugin config-dir`, the keybinding, and so on.
 
@@ -23,12 +23,11 @@
 herdr plugin install forteleaf/herdr-synchronize-input
 ```
 
-herdr clones the repository, runs the manifest build hook (`cargo build --release`), then registers the plugin.
+herdr clones the repository and registers the plugin directly — there is no build step. You just need Node.js on your PATH.
 
 ### Option B — link a local checkout (for development)
 
 ```bash
-cargo build --release
 herdr plugin link "$(pwd)"     # run from the plugin directory (where herdr-plugin.toml lives)
 ```
 
@@ -46,13 +45,11 @@ You can find the config directory with:
 herdr plugin config-dir herdr-synchronize-input
 ```
 
-## Keybinding (added automatically)
+## Keybinding (manual setup required)
 
-herdr has no way to register a keybinding from a manifest, so this plugin adds
-one for you **once** via a startup hook. The first time herdr restores its
-session after install, the plugin ensures the following block exists in your
-herdr config (`~/.config/herdr/config.toml`), backing up the file first and only
-adding the block if an active binding is not already present:
+herdr has no way to register a keybinding from a manifest, so you need to add
+one yourself. Add the following block to your herdr config
+(`~/.config/herdr/config.toml`):
 
 ```toml
 [[keys.command]]
@@ -63,18 +60,10 @@ description = "synchronize input to all panes"
 ```
 
 `prefix` is `Ctrl-b` by default (whatever you set as your herdr prefix), so
-`prefix Shift-y` toggles synchronization.
+`prefix Shift-y` toggles synchronization. Change `key` to bind a different
+shortcut.
 
-Notes:
-
-- **Re-attach herdr** after the binding is added for it to take effect.
-- The install runs **only once** (tracked by a marker in the plugin's state
-  directory). After that the config is yours: change the `key`, or remove the
-  block entirely, and it will not be re-added.
-- The added block is marked with an `# Added by herdr-synchronize-input` comment
-  so it is easy to find.
-- You can also add the block manually before first launch; the hook detects the
-  existing active binding and does nothing.
+**Re-attach herdr** after adding the block for it to take effect.
 
 ## Usage
 
@@ -201,7 +190,7 @@ herdr's plugin API **does not provide a key-input event hook**. tmux can duplica
 
 1. Confirm synchronization is on. Pressing `prefix+shift+y` shows a herdr notification (when `notify = true`).
 
-2. Confirm the keybinding is registered. The [keybinding block](#keybinding-added-automatically) should be present in `~/.config/herdr/config.toml`, and you must re-attach the herdr server after it is added.
+2. Confirm the keybinding is registered. The [keybinding block](#keybinding-manual-setup-required) should be present in `~/.config/herdr/config.toml`, and you must re-attach the herdr server after it is added.
 
 3. Confirm the correct pane is focused. The pane with the highlighted border is focused.
 

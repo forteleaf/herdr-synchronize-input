@@ -11,7 +11,7 @@
 ## 지원 버전
 
 - herdr 0.7.4 이상
-- **Rust 툴체인(cargo, edition 2024 → rustc 1.85+)** — 설치 시 소스에서 컴파일됩니다. herdr는 툴체인을 대신 설치해 주지 않습니다.
+- **Node.js 런타임(PATH에 필요)** — herdr가 대신 설치해 주지 않습니다. 별도 빌드/컴파일 단계가 없고, npm 의존성도 없습니다.
 
 > 플러그인 **id**는 `herdr-synchronize-input`입니다. (GitHub 저장소 이름과 동일하며, `herdr plugin config-dir` · 키바인딩 등에서 이 id를 사용합니다.)
 
@@ -23,12 +23,11 @@
 herdr plugin install forteleaf/herdr-synchronize-input
 ```
 
-herdr가 저장소를 클론하고 매니페스트의 빌드 훅(`cargo build --release`)을 실행한 뒤 등록합니다.
+herdr가 저장소를 클론한 뒤 바로 등록합니다 — 빌드 단계가 없습니다. Node.js만 PATH에 있으면 됩니다.
 
 ### 방법 B — 로컬 체크아웃에서 링크 (개발용)
 
 ```bash
-cargo build --release
 herdr plugin link "$(pwd)"     # 플러그인 디렉토리(herdr-plugin.toml이 있는 곳)에서
 ```
 
@@ -46,9 +45,9 @@ cp config.example.toml "$(herdr plugin config-dir herdr-synchronize-input)/confi
 herdr plugin config-dir herdr-synchronize-input
 ```
 
-## 키바인딩 (자동 추가)
+## 키바인딩 (수동 설정 필요)
 
-herdr는 매니페스트로 키바인딩을 등록하는 방법을 제공하지 않아, 이 플러그인은 startup 훅으로 **한 번** 자동 추가합니다. 설치 후 herdr가 처음 세션을 복원할 때, herdr 설정 파일(`~/.config/herdr/config.toml`)에 아래 블록이 없으면(활성 바인딩 기준) 파일을 백업한 뒤 추가합니다.
+herdr는 매니페스트로 키바인딩을 등록하는 방법을 제공하지 않으므로, 직접 추가해야 합니다. herdr 설정 파일(`~/.config/herdr/config.toml`)에 아래 블록을 추가합니다.
 
 ```toml
 [[keys.command]]
@@ -58,14 +57,9 @@ command = "herdr-synchronize-input.toggle"
 description = "synchronize input to all panes"
 ```
 
-`prefix`는 기본값이 `Ctrl-b`입니다(사용자가 지정한 herdr prefix). 따라서 `prefix Shift-y`를 누르면 동기화가 토글됩니다.
+`prefix`는 기본값이 `Ctrl-b`입니다(사용자가 지정한 herdr prefix). 따라서 `prefix Shift-y`를 누르면 동기화가 토글됩니다. 다른 단축키를 쓰려면 `key` 값을 바꾸세요.
 
-참고:
-
-- 바인딩이 추가된 뒤에는 **herdr를 재부착**해야 적용됩니다.
-- 자동 추가는 **최초 1회만** 실행됩니다(플러그인 state 디렉터리의 마커로 추적). 이후에는 사용자 설정이 우선이라, `key`를 바꾸거나 블록을 통째로 지워도 다시 추가되지 않습니다.
-- 추가된 블록에는 `# Added by herdr-synchronize-input` 주석이 붙어 찾기 쉽습니다.
-- 첫 실행 전에 직접 블록을 넣어 두어도 됩니다. 훅이 기존 활성 바인딩을 감지해 아무 것도 하지 않습니다.
+블록을 추가한 뒤에는 **herdr를 재부착**해야 적용됩니다.
 
 ## 사용법
 
@@ -192,7 +186,7 @@ herdr 플러그인 API는 **키 입력 이벤트 훅을 제공하지 않습니�
 
 1. 동기화가 활성화되었는지 확인합니다. `prefix+shift+y`를 누르면 herdr이 알림을 표시합니다 (`notify = true`일 때).
 
-2. 키바인딩이 등록되었는지 확인합니다. [키바인딩 (자동 추가)](#키바인딩-자동-추가) 블록이 `~/.config/herdr/config.toml`에 있어야 하며, 추가 후 herdr 서버를 재부착해야 합니다.
+2. 키바인딩이 등록되었는지 확인합니다. [키바인딩 (수동 설정 필요)](#키바인딩-수동-설정-필요) 블록이 `~/.config/herdr/config.toml`에 있어야 하며, 추가 후 herdr 서버를 재부착해야 합니다.
 
 3. 포커스 패널이 올바른지 확인합니다. 어두운 테두리로 표시된 패널이 포커스 패널입니다.
 

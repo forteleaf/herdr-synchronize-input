@@ -5,20 +5,9 @@ min_herdr_version = "0.7.4"
 description = "Mirror what you type in the focused pane to every other pane in the same tab, by watching pane output (tmux synchronize-panes, output-watching flavor)."
 platforms = ["macos", "linux"]
 
-# Compiled during `herdr plugin install <owner>/<repo>` (before the plugin is
-# registered). Requires a Rust toolchain (cargo) on PATH; herdr does not install
-# toolchains. Produces ./target/release/sync-input, referenced by the action below.
-[[build]]
-command = ["cargo", "build", "--release"]
-
-# Runs once when herdr restores its session (including right after install).
-# herdr cannot register a keybinding from a manifest, so this ensures the toggle
-# shortcut exists in ~/.config/herdr/config.toml. It is idempotent (adds the
-# binding only if absent) and backs up the config before editing. Re-attach
-# herdr for a newly added binding to take effect.
-[[startup]]
-command = ["./target/release/sync-input", "ensure-keybinding"]
-
+# Pure Node.js, stdlib only — no build step. Requires a Node.js runtime on
+# PATH; herdr does not install one.
+#
 # Bound to a key in the user's config.toml (e.g. prefix+shift+y). Firing it once
 # starts a background watcher that mirrors your keystrokes to the other panes in
 # the focused tab; firing it again stops the watcher.
@@ -26,4 +15,4 @@ command = ["./target/release/sync-input", "ensure-keybinding"]
 id = "toggle"
 title = "Synchronize input to all panes"
 contexts = ["workspace"]
-command = ["./target/release/sync-input", "toggle"]
+command = ["node", "sync-input.js", "toggle"]

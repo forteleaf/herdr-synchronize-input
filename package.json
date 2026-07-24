@@ -1,0 +1,14 @@
+{
+  "name": "herdr-synchronize-input",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Mirror what you type in the focused herdr pane to every other pane in the same tab, by watching pane output (tmux synchronize-panes, output-watching flavor).",
+  "main": "sync-input.js",
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "test": "node --test"
+  },
+  "dependencies": {}
+}
